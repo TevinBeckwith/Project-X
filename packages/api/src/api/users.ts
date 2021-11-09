@@ -11,6 +11,7 @@ const stripSensitiveFields = (user: User): Partial<User> => ({
   schoolName: user.schoolName,
   githubId: user.githubId,
   isAdmin: user.isAdmin,
+  discordId: user.discordId,
 });
 
 users.get('/:userId', async (req, res) => {
@@ -59,9 +60,14 @@ users.patch('/:userId', async (req, res) => {
         return;
       }
 
+      if (currentUser !== user) {
+        res.sendStatus(403);
+        return;
+      }
+
       const editableFields: Array<keyof UserConstructorValues> = adminValue
-        ? ['name', 'pronouns', 'schoolName', 'isAdmin']
-        : ['name', 'pronouns', 'schoolName'];
+        ? ['name', 'pronouns', 'schoolName', 'discordId', 'isAdmin']
+        : ['name', 'pronouns', 'schoolName', 'discordId'];
 
       // Create new patch object only containing fields that are in `editableFields`
       const sanitizedUser = Object.entries(req.body).reduce((acc, [key, value]) => {
@@ -82,5 +88,7 @@ users.patch('/:userId', async (req, res) => {
       logger.error(`There was an issue updating user "${userId}"`, error);
       res.status(500).send(`There was an issue updating user "${userId}"`);
     }
-  } else res.sendStatus(401);
+  } else {
+    res.sendStatus(401);
+  }
 });
